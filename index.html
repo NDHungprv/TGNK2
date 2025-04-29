@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Thông gió nhà kho</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 10px;
+      background: #f2f2f2;
+      margin: 0;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    h2 {
+      text-align: center;
+      margin-top: 10px;
+      color: #333;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin: 15px 0;
+    }
+
+    .card h3 {
+      margin-top: 0;
+      color: #0066cc;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+
+    .input-group {
+      display: flex;
+      align-items: center;
+    }
+
+    .input-group input {
+      flex-grow: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .input-group span {
+      margin-left: 8px;
+      font-weight: bold;
+      color: #666;
+    }
+
+    input:invalid {
+      border-color: #dc3545;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0055aa;
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    .result {
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 15px;
+      white-space: pre-wrap;
+      font-size: 16px;
+      text-align: center;
+      font-weight: bold;
+      display: none;
+    }
+
+    .result.green {
+      background-color: #d4edda;
+      color: #155724;
+      box-shadow: 0 0 10px #9fd6ae;
+    }
+
+    .result.red {
+      background-color: #f8d7da;
+      color: #721c24;
+      box-shadow: 0 0 10px #e09b9f;
+    }
+
+    .result-table {
+      width: 100%;
+      margin-bottom: 15px;
+      border-collapse: collapse;
+    }
+
+    .result-table td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .result-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .bluetooth-status {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+      text-align: center;
+    }
+
+    .footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>THÔNG GIÓ NHÀ KHO</h2>
+
+  <div class="result" id="result"></div>
+
+  <div class="card">
+    <h3>DỮ LIỆU TRONG KHO</h3>
+    <label>Nhiệt độ:</label>
+    <div class="input-group">
+      <input type="number" id="tempIn" placeholder="VD: 30" min="-20" max="60" step="0.1">
+      <span>°C</span>
+    </div>
+
+    <label>Độ ẩm:</label>
+    <div class="input-group">
+      <input type="number" id="humIn" placeholder="VD: 70" min="0" max="100" step="0.1">
+      <span>%</span>
+    </div>
+
+    <button id="btnBluetoothIn" onclick="connectBluetooth('in')">Nhập từ thiết bị Bluetooth</button>
+    <div id="bluetoothStatusIn" class="bluetooth-status"></div>
+  </div>
+
+  <div class="card">
+    <h3>DỮ LIỆU NGOÀI KHO</h3>
+    <label>Nhiệt độ:</label>
+    <div class="input-group">
+      <input type="number" id="tempOut" placeholder="VD: 28" min="-20" max="60" step="0.1">
+      <span>°C</span>
+    </div>
+
+    <label>Độ ẩm:</label>
+    <div class="input-group">
+      <input type="number" id="humOut" placeholder="VD: 60" min="0" max="100" step="0.1">
+      <span>%</span>
+    </div>
+
+    <button id="btnBluetoothOut" onclick="connectBluetooth('out')">Nhập từ thiết bị Bluetooth</button>
+    <div id="bluetoothStatusOut" class="bluetooth-status"></div>
+  </div>
+
+  <button id="btnCalculate" onclick="calculate()">KIỂM TRA ĐIỀU KIỆN THÔNG GIÓ</button>
+
+  <!-- Modal cho người dùng iOS -->
+  <div id="iosModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7);">
+    <div style="background-color: white; margin: 15% auto; padding: 20px; border-radius: 12px; width: 80%; max-width: 500px;">
+      <h3 style="margin-top: 0; color: #0066cc;">Hướng dẫn cho thiết bị iOS</h3>
+      <p>Vì iOS không hỗ trợ Web Bluetooth, bạn có thể sử dụng các cách sau:</p>
+      <ol style="text-align: left; padding-left: 20px;">
+        <li>Sử dụng app <b>TGNK Reader</b> trên App Store để đọc dữ liệu từ thiết bị Bluetooth rồi nhập vào đây.</li>
+        <li>Đọc dữ liệu từ màn hình hiển thị của thiết bị đo, sau đó nhập thủ công vào các trường.</li>
+        <li>Quét mã QR hiện trên thiết bị đo (nếu có) để nhập dữ liệu nhanh.</li>
+      </ol>
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button onclick="scanQRCode()" style="flex: 1; background-color: #28a745;">Quét mã QR</button>
+        <button onclick="closeIOSModal()" style="flex: 1;">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Phiên bản 1.2 - Kiểm tra thông gió nhà kho
+  </div>
+
+  <script>
+    // Kiểm tra hỗ trợ Web Bluetooth API
+    document.addEventListener('DOMContentLoaded', function() {
+      const isBluetoothSupported = 'bluetooth' in navigator;
+      const btnBluetoothIn = document.getElementById('btnBluetoothIn');
+      const btnBluetoothOut = document.getElementById('btnBluetoothOut');
+      const statusIn = document.getElementById('bluetoothStatusIn');
+      const statusOut = document.getElementById('bluetoothStatusOut');
+      
+      if (!isBluetoothSupported) {
+        btnBluetoothIn.disabled = true;
+        btnBluetoothOut.disabled = true;
+        btnBluetoothIn.textContent = "Không hỗ trợ Bluetooth";
+        btnBluetoothOut.textContent = "Không hỗ trợ Bluetooth";
+        
+        // Kiểm tra nếu là iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+          statusIn.innerHTML = 'Thiết bị iOS không hỗ trợ Web Bluetooth. <a href="#" onclick="showIOSInstructions()">Xem hướng dẫn nhập liệu</a>';
+          statusOut.innerHTML = 'Thiết bị iOS không hỗ trợ Web Bluetooth. <a href="#" onclick="showIOSInstructions()">Xem hướng dẫn nhập liệu</a>';
+        } else {
+          statusIn.textContent = "Trình duyệt không hỗ trợ Bluetooth";
+          statusOut.textContent = "Trình duyệt không hỗ trợ Bluetooth";
+        }
+      } else {
+        statusIn.textContent = "Sẵn sàng kết nối";
+        statusOut.textContent = "Sẵn sàng kết nối";
+      }
+
+      // Thêm sự kiện validate cho các input
+      const inputs = document.querySelectorAll('input[type="number"]');
+      inputs.forEach(input => {
+        input.addEventListener('input', function() {
+          validateInput(this);
+        });
+      });
+    });
+
+    function validateInput(input) {
+      const value = parseFloat(input.value);
+      const min = parseFloat(input.getAttribute('min'));
+      const max = parseFloat(input.getAttribute('max'));
+      
+      if (isNaN(value) || value < min || value > max) {
+        input.setCustomValidity(`Giá trị phải từ ${min} đến ${max}`);
+      } else {
+        input.setCustomValidity('');
+      }
+    }
+
+    function showIOSInstructions() {
+      document.getElementById('iosModal').style.display = 'block';
+    }
+
+    function closeIOSModal() {
+      document.getElementById('iosModal').style.display = 'none';
+    }
+
+    // Quét mã QR cho người dùng iOS
+    function scanQRCode() {
+      // Kiểm tra nếu thiết bị hỗ trợ camera
+      if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
+        alert("Tính năng quét mã QR sẽ mở ra. Vui lòng cho phép truy cập camera.");
+        // Code xử lý quét QR sẽ được thêm sau (cần thư viện quét QR)
+        // Tạm thời chỉ hiển thị thông báo
+        setTimeout(() => {
+          const mockData = prompt("Nhập mã từ thiết bị (định dạng: 'T:28.5,H:65')");
+          if (mockData) {
+            parseQRData(mockData);
+          }
+        }, 500);
+      } else {
+        alert("Thiết bị của bạn không hỗ trợ camera. Vui lòng nhập dữ liệu thủ công.");
+      }
+    }
+
+    // Xử lý dữ liệu từ mã QR
+    function parseQRData(data) {
+      try {
+        // Giả sử dữ liệu định dạng "T:28.5,H:65" hoặc tương tự
+        const parts = data.split(',');
+        let temp = null, hum = null;
+
+        parts.forEach(part => {
+          const [key, value] = part.split(':');
+          if (key.trim().toUpperCase() === 'T') {
+            temp = parseFloat(value.trim());
+          } else if (key.trim().toUpperCase() === 'H') {
+            hum = parseFloat(value.trim());
+          }
+        });
+
+        if (temp !== null && hum !== null) {
+          const targetArea = prompt("Dữ liệu cho vị trí nào? (nhập 'in' cho trong kho, 'out' cho ngoài kho)").trim().toLowerCase();
+          
+          if (targetArea === 'in') {
+            document.getElementById('tempIn').value = temp.toFixed(1);
+            document.getElementById('humIn').value = hum.toFixed(1);
+            document.getElementById('bluetoothStatusIn').textContent = `Đã nhập từ mã QR: ${temp.toFixed(1)}°C, ${hum.toFixed(1)}%`;
+          } else if (targetArea === 'out') {
+            document.getElementById('tempOut').value = temp.toFixed(1);
+            document.getElementById('humOut').value = hum.toFixed(1);
+            document.getElementById('bluetoothStatusOut').textContent = `Đã nhập từ mã QR: ${temp.toFixed(1)}°C, ${hum.toFixed(1)}%`;
+          } else {
+            alert("Vị trí không hợp lệ. Vui lòng nhập 'in' hoặc 'out'");
+          }
+        } else {
+          alert("Không thể đọc dữ liệu. Định dạng không đúng.");
+        }
+      } catch (e) {
+        alert("Lỗi khi xử lý dữ liệu: " + e.message);
+      }
+    }
+
+    async function connectBluetooth(area = 'in') {
+      // Kiểm tra nếu là thiết bị iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIOS) {
+        showIOSInstructions();
+        return;
+      }
+
+      const statusElement = document.getElementById(`bluetoothStatus${area.charAt(0).toUpperCase() + area.slice(1)}`);
+      statusElement.textContent = "Đang kết nối...";
+      
+      try {
+        if (!navigator.bluetooth) {
+          throw new Error("Trình duyệt không hỗ trợ Bluetooth");
+        }
+
+        statusElement.textContent = "Đang tìm thiết bị...";
+        const device = await navigator.bluetooth.requestDevice({
+          filters: [{ name: "TGNK" }],
+          optionalServices: ['4fafc201-1fb5-459e-8fcc-c5c9c331914b']
+        });
+
+        statusElement.textContent = "Đang kết nối đến thiết bị...";
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService('4fafc201-1fb5-459e-8fcc-c5c9c331914b');
+        const characteristic = await service.getCharacteristic('beb5483e-36e1-4688-b7f5-ea07361b26a8');
+        
+        statusElement.textContent = "Đang đọc dữ liệu...";
+        const value = await characteristic.readValue();
+        const decoder = new TextDecoder();
+        const data = decoder.decode(value).trim();
+        const [temp, hum] = data.split(',').map(parseFloat);
+
+        if (area === 'in') {
+          document.getElementById('tempIn').value = temp.toFixed(1);
+          document.getElementById('humIn').value = hum.toFixed(1);
+        } else {
+          document.getElementById('tempOut').value = temp.toFixed(1);
+          document.getElementById('humOut').value = hum.toFixed(1);
+        }
+
+        statusElement.textContent = `Đã nhập thành công: ${temp.toFixed(1)}°C, ${hum.toFixed(1)}%`;
+      } catch (error) {
+        statusElement.textContent = "Lỗi: " + error.message;
+      }
+    }
+
+    function calculate() {
+      const T_in = parseFloat(document.getElementById('tempIn').value);
+      const H_in = parseFloat(document.getElementById('humIn').value);
+      const T_out = parseFloat(document.getElementById('tempOut').value);
+      const H_out = parseFloat(document.getElementById('humOut').value);
+      const resultDiv = document.getElementById('result');
+
+      // Kiểm tra đầu vào
+      if ([T_in, H_in, T_out, H_out].some(isNaN)) {
+        resultDiv.innerHTML = "Vui lòng nhập đầy đủ dữ liệu.";
+        resultDiv.className = "result red";
+        resultDiv.style.display = "block";
+        return;
+      }
+
+      if (H_in < 0 || H_in > 100 || H_out < 0 || H_out > 100) {
+        resultDiv.innerHTML = "Độ ẩm phải nằm trong khoảng 0-100%.";
+        resultDiv.className = "result red";
+        resultDiv.style.display = "block";
+        return;
+      }
+
+      if (T_in < -20 || T_in > 60 || T_out < -20 || T_out > 60) {
+        resultDiv.innerHTML = "Nhiệt độ phải nằm trong khoảng -20°C đến 60°C.";
+        resultDiv.className = "result red";
+        resultDiv.style.display = "block";
+        return;
+      }
+
+      function dewPoint(t, rh) {
+        const a = 17.62, b = 243.12;
+        const alpha = Math.log(rh / 100) + (a * t) / (b + t);
+        return (b * alpha) / (a - alpha);
+      }
+
+      function absoluteHumidity(t, rh) {
+        const es = 6.112 * Math.exp((17.67 * t) / (t + 243.5));
+        const e = es * (rh / 100);
+        return 216.7 * (e / (t + 273.15));
+      }
+
+      const AH_in = absoluteHumidity(T_in, H_in);
+      const AH_out = absoluteHumidity(T_out, H_out);
+      const DP_in = dewPoint(T_in, H_in);
+      const DP_out = dewPoint(T_out, H_out);
+
+      // Tạo bảng kết quả
+      let resultHTML = '<table class="result-table">';
+      resultHTML += `<tr><td>Độ ẩm tuyệt đối trong kho:</td><td>${AH_in.toFixed(2)} g/m³</td></tr>`;
+      resultHTML += `<tr><td>Độ ẩm tuyệt đối ngoài kho:</td><td>${AH_out.toFixed(2)} g/m³</td></tr>`;
+      resultHTML += `<tr><td>Điểm sương trong kho:</td><td>${DP_in.toFixed(2)}°C</td></tr>`;
+      resultHTML += `<tr><td>Điểm sương ngoài kho:</td><td>${DP_out.toFixed(2)}°C</td></tr>`;
+      resultHTML += '</table>';
+
+      // Kiểm tra điều kiện
+      let conditions = [];
+      let ok = true;
+
+      if (AH_out >= AH_in) {
+        conditions.push("Không khí ngoài ẩm hơn hoặc bằng trong kho.");
+        ok = false;
+      }
+      
+      if (T_out > 32 || T_out < 10) {
+        conditions.push("Nhiệt độ ngoài kho không nằm trong khoảng 10-32°C.");
+        ok = false;
+      }
+      
+      if (T_out > T_in && DP_out >= T_in) {
+        conditions.push("Ngoài nóng hơn trong, điểm sương ngoài phải nhỏ hơn nhiệt độ trong.");
+        ok = false;
+      }
+      
+      if (T_out < T_in && DP_in >= T_out) {
+        conditions.push("Ngoài lạnh hơn trong, điểm sương trong phải nhỏ hơn nhiệt độ ngoài.");
+        ok = false;
+      }
+
+      // Hiển thị kết quả
+      if (conditions.length > 0) {
+        resultHTML += '<ul style="text-align: left; padding-left: 20px;">';
+        conditions.forEach(condition => {
+          resultHTML += `<li>${condition}</li>`;
+        });
+        resultHTML += '</ul>';
+      }
+
+      resultHTML += `<div style="margin-top: 15px; font-size: 20px;">${ok ? "=> CÓ THỂ THÔNG GIÓ" : "=> KHÔNG NÊN THÔNG GIÓ"}</div>`;
+
+      resultDiv.innerHTML = resultHTML;
+      resultDiv.className = "result " + (ok ? "green" : "red");
+      resultDiv.style.display = "block";
+    }
+  </script>
+</body>
+</html>
