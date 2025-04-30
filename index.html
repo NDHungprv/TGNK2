@@ -190,7 +190,6 @@
       <ol style="text-align: left; padding-left: 20px;">
         <li>Sử dụng app <b>TGNK Reader</b> trên App Store để đọc dữ liệu từ thiết bị Bluetooth rồi nhập vào đây.</li>
         <li>Đọc dữ liệu từ màn hình hiển thị của thiết bị đo, sau đó nhập thủ công vào các trường.</li>
-        <li>Quét mã QR hiện trên thiết bị đo (nếu có) để nhập dữ liệu nhanh.</li>
       </ol>
       <div style="display: flex; gap: 10px; margin-top: 20px;">
         <button onclick="scanQRCode()" style="flex: 1; background-color: #28a745;">Quét mã QR</button>
@@ -414,8 +413,8 @@
       let resultHTML = '<table class="result-table">';
       resultHTML += `<tr><td>Độ ẩm tuyệt đối trong kho:</td><td>${AH_in.toFixed(2)} g/m³</td></tr>`;
       resultHTML += `<tr><td>Độ ẩm tuyệt đối ngoài kho:</td><td>${AH_out.toFixed(2)} g/m³</td></tr>`;
-      resultHTML += `<tr><td>Điểm sương trong kho:</td><td>${DP_in.toFixed(2)}°C</td></tr>`;
-      resultHTML += `<tr><td>Điểm sương ngoài kho:</td><td>${DP_out.toFixed(2)}°C</td></tr>`;
+      resultHTML += `<tr><td>Nhiệt độ iểm sương trong kho:</td><td>${DP_in.toFixed(2)}°C</td></tr>`;
+      resultHTML += `<tr><td>Nhiệt độ điểm sương ngoài kho:</td><td>${DP_out.toFixed(2)}°C</td></tr>`;
       resultHTML += '</table>';
 
       // Kiểm tra điều kiện
